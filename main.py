@@ -1,4 +1,6 @@
 from random import choice
+from typing import Optional
+
 from colorama import Fore
 from words import words_from_file
 
@@ -17,7 +19,7 @@ def play() -> None:
         return ''.join(color_and_char(ascii_code) for ascii_code in range(ord('a'), ord('z') + 1))
 
     def get_valid_answer() -> str:
-        answer: str | None = None
+        answer: Optional[str] = None
         while not answer:
             prompt = colored_alphabet(hits, misses) + Fore.LIGHTWHITE_EX + ' ➜ ' + Fore.WHITE
             response = input(prompt)
@@ -43,7 +45,7 @@ def play() -> None:
                                 for name in ('common-words', 'many-words')]
     word = choice(common_words)
     print('Shhh... the word is', word)
-    answer: None | str = None
+    answer: Optional[str] = None
     hits: set[str] = set()
     misses: set[str] = set()
 
