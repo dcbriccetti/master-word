@@ -1,5 +1,5 @@
 from random import choice
-from typing import Optional
+from typing import Optional, Iterator
 
 from colorama import Fore
 from words import words_from_file
@@ -7,6 +7,26 @@ from words import words_from_file
 WORD_LENGTH = 5
 
 def play() -> None:
+    hint_commands = ('h', 'hint')
+
+    def find_hint():
+        'Without any reference to the actual word to be guessed, but only considering hits and misses, return a hint'
+
+        def words_with_hits() -> Iterator[str]:
+            'For every word with at least one hit and no mismatches, return the number of hits and the word'
+
+            for word in common_words:
+                letters = set(word)
+                num_matches = len(letters & hits)
+                mismatches = letters & misses
+                if num_matches and not mismatches:
+                    yield num_matches, word
+
+        words = list(words_with_hits())
+        words.sort(reverse=True)
+        best_words = [w for w in words if w[0] == words[0][0]]
+        return choice(best_words)[1] if best_words else None
+
     def colored_alphabet(hits: set[str], misses: set[str]) -> str:
         'Return a string of the letters of the alphabet colored by hit, miss, unknown'
         def color_and_char(ascii_code: int) -> str:
@@ -23,6 +43,8 @@ def play() -> None:
         while not answer:
             prompt = colored_alphabet(hits, misses) + Fore.LIGHTWHITE_EX + ' ➜ ' + Fore.WHITE
             response = input(prompt)
+            if response in hint_commands:
+                return response
             if len(response) != WORD_LENGTH:
                 print(Fore.WHITE + f'Your answer must have {WORD_LENGTH} letters')
             elif response not in many_words:
@@ -51,7 +73,10 @@ def play() -> None:
 
     while answer != word:
         answer = get_valid_answer()
-        show_output_pattern()
+        if answer in hint_commands:
+            print(Fore.BLUE + find_hint())
+        else:
+            show_output_pattern()
 
 if __name__ == '__main__':
     play()
