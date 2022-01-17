@@ -8,11 +8,12 @@ WORD_LENGTH = 5
 
 def play() -> None:
     hint_commands = ('h', 'hint')
+    CountAndWord = tuple[int, str]
 
-    def find_hint():
+    def find_hint() -> Optional[str]:
         'Without any reference to the actual word to be guessed, but only considering hits and misses, return a hint'
 
-        def words_with_hits() -> Iterator[str]:
+        def words_with_hits() -> Iterator[CountAndWord]:
             'For every word with at least one hit and no mismatches, return the number of hits and the word'
 
             for word in common_words:
@@ -22,10 +23,11 @@ def play() -> None:
                 if num_matches and not mismatches:
                     yield num_matches, word
 
-        words = list(words_with_hits())
-        words.sort(reverse=True)
-        best_words = [w for w in words if w[0] == words[0][0]]
-        return choice(best_words)[1] if best_words else None
+        count_and_words = list(words_with_hits())
+        count_and_words.sort(reverse=True)
+        best_words: list[str] = [word for count, word in count_and_words
+                                 if count == count_and_words[0][0]]
+        return choice(best_words) if best_words else None
 
     def colored_alphabet(hits: set[str], misses: set[str]) -> str:
         'Return a string of the letters of the alphabet colored by hit, miss, unknown'
@@ -74,7 +76,8 @@ def play() -> None:
     while answer != word:
         answer = get_valid_answer()
         if answer in hint_commands:
-            print(Fore.BLUE + find_hint())
+            hint = find_hint()
+            print(Fore.BLUE + hint if hint else 'No hints yet')
         else:
             show_output_pattern()
 
