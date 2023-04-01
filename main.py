@@ -1,4 +1,5 @@
 from random import choice
+from string import ascii_lowercase
 from typing import Optional, Iterator
 
 from colorama import Fore
@@ -11,10 +12,10 @@ def play() -> None:
     CountAndWord = tuple[int, str]
 
     def find_hint() -> Optional[str]:
-        'Without any reference to the actual word to be guessed, but only considering hits and misses, return a hint'
+        'Return a hint based on the hits and misses without considering the actual word to be guessed.'
 
         def words_with_hits() -> Iterator[CountAndWord]:
-            'For every word with at least one hit and no mismatches, return the number of hits and the word'
+            'Yield the number of hits and the corresponding word for each word with at least one hit and no mismatches.'
 
             for word in common_words:
                 letters = set(word)
@@ -30,17 +31,22 @@ def play() -> None:
         return choice(best_words) if best_words else None
 
     def colored_alphabet(hits: set[str], misses: set[str]) -> str:
-        'Return a string of the letters of the alphabet colored by hit, miss, unknown'
-        def color_and_char(ascii_code: int) -> str:
-            char = chr(ascii_code)
-            color = Fore.GREEN if char in hits \
-                else Fore.RED if char in misses \
+        'Return a string of the alphabet’s letters colored according to their status in hits, misses, or unknown.'
+
+        def colored_char(char: str) -> str:
+            'Return the input character with an appropriate color based on its presence in hits or misses.'
+            color = (
+                Fore.GREEN if char in hits
+                else Fore.RED if char in misses
                 else Fore.LIGHTBLACK_EX
+            )
             return color + char
 
-        return ''.join(color_and_char(ascii_code) for ascii_code in range(ord('a'), ord('z') + 1))
+        return ''.join(colored_char(char) for char in ascii_lowercase)
 
     def get_valid_answer() -> str:
+        'Get a valid answer from the user, ensuring it has the correct length and is in the word list.'
+
         answer: Optional[str] = None
         while not answer:
             prompt = colored_alphabet(hits, misses) + Fore.LIGHTWHITE_EX + ' ➜ ' + Fore.WHITE
@@ -56,29 +62,44 @@ def play() -> None:
         return answer
 
     def show_output_pattern() -> None:
+        'Display the output pattern with the appropriate colors for matched and unmatched letters.'
+
         for word_letter, answer_letter in zip(word, answer):
-            [misses, hits][answer_letter in word].add(answer_letter)
-            display_color, display_char = \
-                (Fore.GREEN, word_letter) if word_letter == answer_letter \
-                else (Fore.YELLOW, answer_letter) if answer_letter in word \
-                else (Fore.WHITE, '*')
-            print(display_color + display_char, end='')
+            (hits if answer_letter in word else misses).add(answer_letter)
+            colored_char = (
+                Fore.GREEN + word_letter if word_letter == answer_letter
+                else Fore.YELLOW + answer_letter if answer_letter in word
+                else Fore.WHITE + '*'
+            )
+            print(colored_char, end='')
         print()
 
+    # Create lists of common and many words by reading from respective files
     common_words, many_words = [list(words_from_file(f'resources/{name}.txt', word_length=WORD_LENGTH))
-                                for name in ('common-words', 'many-words')]
+                                for name in ['common-words', 'many-words']]
+
+    # Choose a random word from common_words as the target word
     word = choice(common_words)
+
+    # Print the chosen word (for debugging purposes)
     print('Shhh... the word is', word)
+
+    # Initialize the answer, hits, and misses
     answer: Optional[str] = None
     hits: set[str] = set()
     misses: set[str] = set()
 
+    # Keep playing until the user guesses the correct word
     while answer != word:
+        # Get a valid answer from the user
         answer = get_valid_answer()
+
+        # If the user requested a hint, display it
         if answer in hint_commands:
             hint = find_hint()
             print(Fore.BLUE + hint if hint else 'No hints yet')
         else:
+            # Show the output pattern with the appropriate colors for matched and unmatched letters
             show_output_pattern()
 
 if __name__ == '__main__':
