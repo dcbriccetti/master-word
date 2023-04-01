@@ -77,6 +77,9 @@ def play() -> None:
     # Create lists of common and many words by reading from respective files
     common_words, many_words = [list(words_from_file(f'resources/{name}.txt', word_length=WORD_LENGTH))
                                 for name in ['common-words', 'many-words']]
+    if not common_words or not many_words:
+        print(f'Error: No words of length {WORD_LENGTH} found in input files.')
+        return
 
     # Choose a random word from common_words as the target word
     word = choice(common_words)

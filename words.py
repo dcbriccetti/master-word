@@ -11,12 +11,17 @@ def words_from_file(filename: str, comment_char='#', word_length=None) -> Iterat
     :param word_length: if given, the length of words to be selected from the file
     :return: the words read from the file
     '''
-    with open(filename) as file:
-        for line in file:
-            if not line.startswith(comment_char):
-                word = line.strip().lower()
-                if word_length is None or len(word) == word_length:
-                    yield word
+    try:
+        with open(filename) as file:
+            for line in file:
+                if not line.startswith(comment_char):
+                    word = line.strip().lower()
+                    if word_length is None or len(word) == word_length:
+                        yield word
+    except FileNotFoundError:
+        print(f'Error: File "{filename}" not found.')
+    except OSError:
+        print(f'Error: Unable to open file "{filename}".')
 
 
 def words_by_length(words: Iterable[str]) -> Dict[int, List[str]]:
